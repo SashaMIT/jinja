@@ -464,6 +464,12 @@ class TestFilter:
         )
         assert tmpl.render() == "20.0|30.0|20.0", tmpl.render()
 
+    def test_round_keeps_exact_decimal(self, env):
+        tmpl = env.from_string(
+            "{{ 1.1|round(2, 'ceil') }}|{{ 1.15|round(2, 'floor') }}"
+        )
+        assert tmpl.render() == "1.1|1.15"
+
     def test_xmlattr(self, env):
         tmpl = env.from_string(
             "{{ {'foo': 42, 'bar': 23, 'fish': none, "

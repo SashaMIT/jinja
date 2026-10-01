@@ -5,6 +5,9 @@ Version 3.2.0
 
 Unreleased
 
+-   The ``|round`` filter with ``ceil`` or ``floor`` keeps a value that is
+    already at the requested precision. ``1.1|round(2, 'ceil')`` is ``1.1``,
+    and ``1.15|round(2, 'floor')`` is ``1.15``. :issue:`2281`
 -   Drop support for Python 3.7, 3.8, and 3.9.
 -   Update minimum MarkupSafe version to >= 3.0.
 -   Update minimum Babel version to >= 2.17.

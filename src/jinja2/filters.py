@@ -1,5 +1,6 @@
 """Built-in template filters used with the ``|`` operator."""
 
+import decimal
 import math
 import random
 import re
@@ -1170,6 +1171,11 @@ def do_round(
 
         {{ 42.55|round|int }}
             -> 43
+
+    .. versionchanged:: 3.2.0
+        ``ceil`` and ``floor`` round the decimal value. ``1.1`` ceiled to
+        2 places stays ``1.1``. Previously the binary float was slightly
+        above ``1.1``, so the result was ``1.11``.
     """
     if method not in {"common", "ceil", "floor"}:
         raise FilterArgumentError("method must be common, ceil or floor")
@@ -1177,8 +1183,19 @@ def do_round(
     if method == "common":
         return round(value, precision)
 
-    func = getattr(math, method)
-    return t.cast(float, func(value * (10**precision)) / (10**precision))
+    # bool is an int, and other numeric types keep the old scaling.
+    # Floats go through Decimal so 1.1 ceiled to 2 places stays 1.1.
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        func = getattr(math, method)
+        return t.cast(float, func(value * (10**precision)) / (10**precision))
+
+    if isinstance(value, int):
+        number = decimal.Decimal(value)
+    else:
+        number = decimal.Decimal(str(value))
+    exponent = decimal.Decimal(1).scaleb(-precision)
+    rounding = decimal.ROUND_CEILING if method == "ceil" else decimal.ROUND_FLOOR
+    return float(number.quantize(exponent, rounding=rounding))
 
 
 class _GroupTuple(t.NamedTuple):
